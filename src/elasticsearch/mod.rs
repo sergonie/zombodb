@@ -52,6 +52,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::io::Read;
+use std::sync::Arc;
 
 lazy_static! {
     static ref NUM_CPUS: usize = num_cpus::get();
@@ -136,6 +137,7 @@ impl Elasticsearch {
                 ureq::AgentBuilder::new()
                 .timeout_read(std::time::Duration::from_secs(3600))  // a 1hr timeout waiting on ES to return
                 .max_idle_connections_per_host(num_cpus::get())     // 1 for each CPU -- only really used during _bulk
+                .tls_connector(Arc::new(native_tls::TlsConnector::new().unwrap()))
                 .build()
             };
         }
