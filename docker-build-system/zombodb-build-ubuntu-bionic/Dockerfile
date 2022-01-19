@@ -27,7 +27,7 @@ RUN useradd -m ${USER} --uid=${UID}
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y -qq --fix-missing
-RUN apt-get install -y wget gnupg
+RUN apt-get install -y wget gnupg openssl ca-certificates
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 RUN apt update
@@ -43,6 +43,10 @@ RUN apt-get install -y postgresql-13 postgresql-server-dev-13
 RUN apt-get install -y postgresql-14 postgresql-server-dev-14
 RUN apt-get install -y ruby ruby-dev rubygems build-essential
 RUN gem install --no-document fpm
+
+RUN wget https://storage.yandexcloud.net/cloud-certs/CA.pem 
+RUN mkdir /usr/local/share/ca-certificates/yandex/ && cp CA.pem /usr/local/share/ca-certificates/yandex/CA.crt
+RUN update-ca-certificates
 
 USER ${UID}:${GID}
 WORKDIR /home/${USER}
