@@ -21,6 +21,9 @@ mod update_settings;
 pub mod aggregate_search;
 pub mod search;
 
+extern crate native_tls;
+
+use std::sync::Arc;
 use crate::access_method::options::ZDBIndexOptions;
 use crate::elasticsearch::aggregate_search::ElasticsearchAggregateSearchRequest;
 use crate::elasticsearch::aliases::ElasticsearchAliasRequest;
@@ -134,6 +137,7 @@ impl Elasticsearch {
         lazy_static::lazy_static! {
             static ref AGENT: ureq::Agent = {
                 ureq::AgentBuilder::new()
+                .tls_connector(Arc::new(native_tls::TlsConnector::new().unwrap()))
                 .timeout_read(std::time::Duration::from_secs(3600))  // a 1hr timeout waiting on ES to return
                 .max_idle_connections_per_host(num_cpus::get())     // 1 for each CPU -- only really used during _bulk
                 .build()
