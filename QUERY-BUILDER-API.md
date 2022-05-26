@@ -152,14 +152,28 @@ PREPARE example AS SELECT * FROM table WHERE table ==> dsl.and($1, dsl.range(fie
 Now we can execute that query using a different search term and age range:
 
 ```sql
-EXECUTE exampe('cats', 3);
-EXECUTE exampe('dogs', 7);
-EXECUTE exampe('elephants', 23);
+EXECUTE example('cats', 3);
+EXECUTE example('dogs', 7);
+EXECUTE example('elephants', 23);
 ```
 
 Using prepared statements is extremely important to avoid SQL-injection attacks. ZomboDB makes this possible for your
 Elasticsearch QueryDSL query clauses too. Any argument to any of the functions can become a prepared statement arugment
 that you can change at EXECUTE time.
+
+### Query-time configuration
+
+#### `dsl.row_estimate()`
+
+```sql
+FUNCTION dsl.row_estimate(
+  row_estimate bigint,
+  query zdbquery
+) RETURNS zdbquery
+```
+
+Similar to [`zdb.default_row_estimate`](CONFIGURATION-SETTINGS.md#zdbdefault_row_estimate),
+but applies (and is actual) only during the query.
 
 ### Sorting and Limiting Results
 
@@ -748,10 +762,10 @@ FUNCTION dsl.match (
 	fuzzy_rewrite text DEFAULT NULL,
 	fuzzy_transpositions boolean DEFAULT NULL,
 	prefix_length integer DEFAULT NULL,
-	zero_terms_query dsl.es_match_zero_terms_query DEFAULT NULL,
 	cutoff_frequency real DEFAULT NULL,
-	operator dsl.es_match_operator DEFAULT NULL,
-	auto_generate_synonyms_phrase_query boolean DEFAULT NULL)
+	auto_generate_synonyms_phrase_query boolean DEFAULT NULL,
+	zero_terms_query zerotermsquery DEFAULT NULL,
+	operator operator DEFAULT NULL)
 RETURNS zdbquery
 ```
 
@@ -759,6 +773,8 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-
 
 `match` queries accept text/numerics/dates, analyzes them, and constructs a query.
 
+
+Enum `zerotermsquery` available values: `none`, `all`
 ______________________________________________________________________
 
 #### `dsl.match_all()`
@@ -895,7 +911,6 @@ FUNCTION dsl.multi_match (
 	fields text[],
 	query text,
 	boost real DEFAULT NULL,
-	type dsl.es_multi_match_type DEFAULT NULL,
 	analyzer text DEFAULT NULL,
 	minimum_should_match integer DEFAULT NULL,
 	lenient boolean DEFAULT NULL,
@@ -903,10 +918,11 @@ FUNCTION dsl.multi_match (
 	fuzzy_rewrite text DEFAULT NULL,
 	fuzzy_transpositions boolean DEFAULT NULL,
 	prefix_length integer DEFAULT NULL,
-	zero_terms_query dsl.es_match_zero_terms_query DEFAULT NULL,
 	cutoff_frequency real DEFAULT NULL,
-	operator dsl.es_match_operator DEFAULT NULL,
-	auto_generate_synonyms_phrase_query boolean DEFAULT NULL)
+	auto_generate_synonyms_phrase_query boolean DEFAULT NULL,
+	zero_terms_query zerotermsquery DEFAULT NULL,
+	operator operator DEFAULT NULL,
+	match_type matchtype DEFAULT NULL)
 RETURNS zdbquery
 ```
 
@@ -914,6 +930,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-
 
 The `multi_match` query builds on the match query to allow multi-field queries.
 
+Enum `zerotermsquery` available values: `none`, `all`
 ______________________________________________________________________
 
 #### `dsl.query_string()`
@@ -921,27 +938,26 @@ ______________________________________________________________________
 ```sql
 FUNCTION dsl.query_string(
 	query text,
-	default_operator dsl.esqdsl_default_operators DEFAULT NULL,
 	default_field text DEFAULT NULL,
-	analyzer text DEFAULT NULL,
-	quote_analyzer text DEFAULT NULL,
 	allow_leading_wildcard boolean DEFAULT NULL,
-	enable_position_increments boolean DEFAULT NULL,
-	fuzzy_max_expansions integer DEFAULT NULL,
-	fuzziness text DEFAULT NULL,
-	fuzzy_prefix_length integer DEFAULT NULL,
-	fuzzy_transpositions boolean DEFAULT NULL,
-	phrase_slop integer DEFAULT NULL,
-	boost real DEFAULT NULL,
-	auto_generate_phrase_queries boolean DEFAULT NULL,
 	analyze_wildcard boolean DEFAULT NULL,
-	max_determinized_states integer DEFAULT NULL,
-	minimum_should_match integer DEFAULT NULL,
-	lenient boolean DEFAULT NULL,
-	time_zone text DEFAULT NULL,
-	quote_field_suffix text DEFAULT NULL,
+	analyzer text DEFAULT NULL,
 	auto_generate_synonyms_phrase_query boolean DEFAULT NULL,
-	all_fields boolean DEFAULT NULL)
+	boost real DEFAULT NULL,
+	default_operator querystringdefaultoperator DEFAULT NULL,
+	enable_position_increments boolean DEFAULT NULL,
+	fields text[] DEFAULT NULL,
+	fuzziness integer DEFAULT NULL,
+	fuzzy_max_expansions bigint DEFAULT NULL,
+	fuzzy_transpositions boolean DEFAULT NULL,
+	fuzzy_prefix_length bigint DEFAULT NULL,
+	lenient boolean DEFAULT NULL,
+	max_determinized_states bigint DEFAULT NULL,
+	minimum_should_match integer DEFAULT NULL,
+	quote_analyzer text DEFAULT NULL,
+	phrase_slop bigint DEFAULT NULL,
+	quote_field_suffix text DEFAULT NULL,
+	time_zone text DEFAULT NULL)
 RETURNS zdbquery
 ```
 
@@ -950,6 +966,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-
 A query that uses a query parser in order to parse its content. The query_string query parses the input and splits text
 around operators. Each textual part is analyzed independently of each other.
 
+Enum `querystringdefaultoperator` available values: `and`, `or`
 ______________________________________________________________________
 
 #### `dsl.nested()`
@@ -958,7 +975,8 @@ ______________________________________________________________________
 FUNCTION dsl.nested (
 	path text,
 	query zdbquery,
-	score_mode dsl.es_nested_score_mode DEFAULT 'avg'::dsl.es_nested_score_mode)
+	score_mode scoremode DEFAULT 'avg'::scoremode),
+	ignore_unmapped boolean DEFAULT NULL
 RETURNS zdbquery
 ```
 
@@ -967,6 +985,8 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-nested
 Nested query allows to query nested objects / docs (see nested mapping). The query is executed against the nested
 objects / docs as if they were indexed as separate docs (they are, internally) and resulting in the root parent doc (or
 parent nested mapping).
+
+Enum `scoremode` available values: `avg`, `sum`, `min`, `max`, `none`
 
 ______________________________________________________________________
 
@@ -1059,7 +1079,7 @@ FUNCTION dsl.regexp (
 	field text,
 	regexp text,
 	boost real DEFAULT NULL,
-	flags dsl.es_regexp_flags[] DEFAULT NULL,
+	flags regexflags[] DEFAULT NULL,
 	max_determinized_states integer DEFAULT NULL)
 RETURNS zdbquery
 ```
@@ -1068,6 +1088,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-regexp
 
 The regexp query allows you to use regular expression term queries.
 
+Enum `regexflags` available values: `all`, `complement`, `interval`, `intersection`, `anystring`
 ______________________________________________________________________
 
 #### `dsl.script()`
@@ -1358,7 +1379,7 @@ ______________________________________________________________________
 FUNCTION dsl.geo_shape(
     field text,
     geojson_shape json,
-    relation dsl.es_geo_shape_relation
+    relation geoshaperelation
 ) RETURNS zdbquery
 ```
 
@@ -1370,6 +1391,7 @@ mapping.
 
 The query supports one way of defining the query shape: by providing a whole shape definition.
 
+Enum `geoshaperelation` available values: `INTERSECTS`, `DISJOINT`, `WITHIN`, `CONTAINS`
 ______________________________________________________________________
 
 #### `dsl.geo_polygon()`
@@ -1392,11 +1414,13 @@ ______________________________________________________________________
 ```sql
 FUNCTION dsl.geo_bounding_box(
     field text, 
-    box box, 
-    type dsl.es_geo_bounding_box_type DEFAULT 'memory'  -- one of 'memory' or 'indexed'
+    bounding_box box, 
+    box_type geoboundingboxtype DEFAULT 'memory'::geoboundingboxtype
 )
 ```
 
 https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-bounding-box-query.html
 
-Given a Postgres `box` object, generates an Elasticsearch `geo_bounding_box()` query
+Given a Postgres `box` object, generates an Elasticsearch `geo_bounding_box()` query.
+
+Enum `geoboundingboxtype` available values: `memory`, `indexed`

@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-# Copyright 2018-2021 ZomboDB, LLC
+# Copyright 2018-2022 ZomboDB, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 PGVER=$1
 IMAGE=$2
+PGX_VERSION=$3
 
 if [ "x${PGVER}" == "x" ] || [ "x${IMAGE}" == "x" ] ; then
 	echo 'usage:  ./package.sh <PGVER> <image>'
@@ -42,9 +43,9 @@ PG_CONFIG_DIR=$(dirname $(grep ${PGVER} ~/.pgx/config.toml | cut -f2 -d= | cut -
 export PATH=${PG_CONFIG_DIR}:${PATH}
 
 #
-# ensure cargo-pgx is up-to-date
+# ensure cargo-pgx is the correct version
 #
-cargo install cargo-pgx
+cargo install cargo-pgx --version $PGX_VERSION
 
 #
 # build the extension

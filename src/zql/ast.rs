@@ -221,6 +221,8 @@ impl<'input> Term<'input> {
                 }
             } else if has_whitespace {
                 Term::Phrase(s, b)
+            } else if Term::might_be_a_phrase(s) {
+                Term::Phrase(s, b)
             } else {
                 Term::String(s, b)
             }
@@ -240,6 +242,10 @@ impl<'input> Term<'input> {
             }
         }
         true
+    }
+
+    fn might_be_a_phrase(input: &str) -> bool {
+        input.chars().any(|c| !c.is_alphanumeric() && c != '_')
     }
 }
 
@@ -622,6 +628,13 @@ impl<'input> Expr<'input> {
 
         for e in exprs {
             let local_path = e.get_nested_path();
+
+            // get the top-level path, if we have one
+            let local_path = if local_path.is_some() {
+                Some(local_path.unwrap().split('.').next().unwrap().to_string())
+            } else {
+                local_path
+            };
 
             if path.is_none() {
                 path = local_path;

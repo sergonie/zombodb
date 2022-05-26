@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2021 ZomboDB, LLC
+# Copyright 2018-2022 ZomboDB, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ LABEL maintainer="ZomboDB, LLC (zombodb@gmail.com)"
 ARG USER=docker
 ARG UID=1000
 ARG GID=1000
-ARG PGXVERSION
+
 
 RUN useradd -m ${USER} --uid=${UID}
 
@@ -35,7 +35,7 @@ RUN apt-get update -y --fix-missing
 
 RUN apt-get install -y git
 RUN apt-get install -y curl
-RUN apt-get install -y clang-9 llvm-9 gcc make build-essential libz-dev zlib1g-dev strace libssl-dev pkg-config
+RUN apt-get install -y make build-essential libz-dev zlib1g-dev strace libssl-dev pkg-config
 RUN apt-get install -y postgresql-10 postgresql-server-dev-10
 RUN apt-get install -y postgresql-11 postgresql-server-dev-11
 RUN apt-get install -y postgresql-12 postgresql-server-dev-12
@@ -50,7 +50,7 @@ WORKDIR /home/${USER}
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 ENV PATH="/home/${USER}/.cargo/bin:${PATH}"
 
-RUN cargo install cargo-pgx --version ${PGXVERSION}
+RUN cargo install cargo-pgx
 RUN cargo pgx init \
 	--pg10=/usr/lib/postgresql/10/bin/pg_config \
 	--pg11=/usr/lib/postgresql/11/bin/pg_config \

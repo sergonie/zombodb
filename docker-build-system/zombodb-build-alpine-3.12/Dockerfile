@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2021 ZomboDB, LLC
+# Copyright 2018-2022 ZomboDB, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ LABEL maintainer="ZomboDB, LLC (zombodb@gmail.com)"
 ARG USER=docker
 ARG UID=1000
 ARG GID=1000
-ARG PGXVERSION
+
 
 RUN adduser --uid=${UID} -D ${USER}
 
@@ -51,7 +51,7 @@ USER ${USER}
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 ENV PATH="/home/${USER}/.cargo/bin:${PATH}"
 
-RUN cargo install cargo-pgx --version ${PGXVERSION}
+RUN cargo install cargo-pgx
 
 ARG PGVER
 RUN cargo pgx init --pg${PGVER}=$(which pg_config)
