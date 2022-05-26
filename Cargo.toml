@@ -40,8 +40,9 @@ serde = { version = "1.0.137", features = [ "derive" ] }
 serde_json = { version = "1.0.80", features = [ "preserve_order" ] }
 serde_cbor = "0.11.2"
 sqlformat = "0.1.8"
-ureq = { version = "2.4.0", features = [ "json" ] }
+ureq = { version = "2.4.0", features = [ "json", "native-tls" ] }
 url = "2.2.2"
+native-tls = "0.2"
 
 [build-dependencies]
 lalrpop = { version = "0.19.7", features = [ "lexer" ] }
